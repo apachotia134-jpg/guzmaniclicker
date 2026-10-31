@@ -58,6 +58,12 @@
             margin: 0 0 20px 0;
             color: #a0dce4;
             font-weight: bold;
+            cursor: pointer;      /* click to switch number format */
+            user-select: none;
+        }
+
+        .jesuslings-number:hover {
+            filter: brightness(1.2);
         }
 
         .image-clicker-container {
@@ -229,7 +235,7 @@
             <div class="per-click" id="per-click">+1 per click</div>
 
             <div class="jesuslings-title">jesuslings</div>
-            <div class="jesuslings-number" id="jesuslings">0</div>
+            <div class="jesuslings-number" id="jesuslings" title="Click to switch number format">0</div>
 
             <div id="click-target" class="image-clicker-container">
                 <img src="ppzeus.png" alt="Click Target" class="clicker-img">
@@ -275,6 +281,33 @@
         function useFallbackIcon(img) {
             img.onerror = null; // prevent an endless error loop
             img.src = FALLBACK_ICON;
+        }
+
+        // --- NUMBER FORMATTING ---
+        // Click the big jesuslings number to switch between short and full
+        let showFullNumbers = localStorage.getItem('clicker_fullnumbers') === 'true';
+
+        // Biggest first. Add more tiers here if you want them.
+        const NUMBER_TIERS = [
+            { value: 1e15, suffix: 'quad' },
+            { value: 1e12, suffix: 'trill' },
+            { value: 1e9,  suffix: 'bill' },
+            { value: 1e6,  suffix: 'mill' }
+        ];
+
+        function formatNumber(n) {
+            n = Math.floor(n);
+            if (showFullNumbers || n < 1e6) {
+                return n.toLocaleString();
+            }
+            for (const tier of NUMBER_TIERS) {
+                if (n >= tier.value) {
+                    // round down to 1 decimal so it never overstates (5.29 -> 5.2)
+                    const short = (Math.floor(n / tier.value * 10) / 10).toFixed(1).replace(/\.0$/, '');
+                    return `${short} ${tier.suffix}`;
+                }
+            }
+            return n.toLocaleString();
         }
 
         // --- DESCRIPTION BOX TEXT ---
@@ -355,6 +388,13 @@
 
         showDescription(null);
 
+        // Toggle short / full numbers
+        jesuslingsDisplay.addEventListener('click', () => {
+            showFullNumbers = !showFullNumbers;
+            localStorage.setItem('clicker_fullnumbers', showFullNumbers);
+            updateDisplay();
+        });
+
         // --- BUILD THE UPGRADE BUTTONS ---
         UPGRADES.forEach(u => {
             // Wrapper so hover works even when the button is disabled
@@ -414,12 +454,12 @@
         }
 
         function updateDisplay() {
-            jesuslingsDisplay.innerText = jesuslings;
-            perClickDisplay.innerText = `+${clickValue()} per click`;
+            jesuslingsDisplay.innerText = formatNumber(jesuslings);
+            perClickDisplay.innerText = `+${formatNumber(clickValue())} per click`;
 
             UPGRADES.forEach(u => {
-                u.nameEl.innerText = `${u.name} (${u.levelLabel}: ${u.level})`;
-                u.infoEl.innerText = `${u.desc} | Cost: ${u.cost}`;
+                u.nameEl.innerText = `${u.name} (${u.levelLabel}: ${formatNumber(u.level)})`;
+                u.infoEl.innerText = `${u.desc} | Cost: ${formatNumber(u.cost)}`;
                 u.btn.disabled = jesuslings < u.cost;
             });
         }
@@ -440,6 +480,8 @@
                     u.level = u.startLevel;
                     u.cost = u.baseCost;
                 });
+                // keep the player's number-format choice after a reset
+                localStorage.setItem('clicker_fullnumbers', showFullNumbers);
                 updateDisplay();
             }
         }
