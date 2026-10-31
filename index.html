@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>guzmaniclicker</title>
+    <title>Simple Clicker Game</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,26 +27,34 @@
             margin-bottom: 20px;
         }
 
-        /* The Main Clicker Button */
-        #click-btn {
-            padding: 20px 40px;
-            font-size: 24px;
-            font-weight: bold;
+        /* Image Clicker Styling */
+        .image-clicker-container {
+            display: inline-block;
             cursor: pointer;
-            background-color: #a0dce4;
-            color: #333;
-            border: none;
-            border-radius: 8px;
             user-select: none;
-            transition: transform 0.1s, background-color 0.2s;
+            outline: none;
+            transition: transform 0.1s;
+            margin: 20px 0;
         }
 
-        #click-btn:hover {
-            background-color: #bfeff5;
+        .clicker-img {
+            max-width: 200px;
+            max-height: 200px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 10px;
+            /* Optional: Add a subtle shadow glow to make it stand out */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: filter 0.2s;
         }
 
-        #click-btn:active {
-            transform: scale(0.95);
+        .image-clicker-container:hover .clicker-img {
+            filter: brightness(1.1); /* Light up slightly on hover */
+        }
+
+        .image-clicker-container:active {
+            transform: scale(0.92); /* Shrink slightly when clicked */
         }
 
         /* Shop Upgrade Button */
@@ -84,8 +92,11 @@
     <div class="game-container">
         <h1>Score: <span id="score">0</span></h1>
         
-        <!-- Main Game Button -->
-        <button id="click-btn">CLICK ME!</button>
+        <!-- Main Image Clicker Target -->
+        <div id="click-target" class="image-clicker-container">
+            <!-- ⚠️ REPLACE 'your-character-image.png' WITH YOUR ACTUAL IMAGE FILE NAME OR URL -->
+            <img src="your-character-image.png" alt="Click Target" class="clicker-img">
+        </div>
         
         <br>
         
@@ -107,14 +118,184 @@
 
         // --- DOM ELEMENTS ---
         const scoreDisplay = document.getElementById('score');
-        const clickBtn = document.getElementById('click-btn');
+        const clickTarget = document.getElementById('click-target');
         const upgradeBtn = document.getElementById('upgrade-btn');
         const autoCountDisplay = document.getElementById('auto-count');
 
         // --- CORE LOGIC ---
 
-        // 1. Manual Click
-        clickBtn.addEventListener('click', () => {
+        // 1. Image Click
+        clickTarget.addEventListener('click', () => {
+            score++;
+            updateDisplay();
+        });
+
+        // 2. Buy Auto-Clicker Upgrade
+        upgradeBtn.addEventListener('click', () => {
+            if (score >= upgradeCost) {
+                score -= upgradeCost;
+                autoClickers++;
+                
+                // Increase the price scale for the next upgrade (multiplied by 1.5)
+                upgradeCost = Math.round(upgradeCost * 1.5); 
+                
+                updateDisplay();
+            }
+        });
+
+        // 3. Keep visual elements synchronized
+        function updateDisplay() {
+            scoreDisplay.innerText = score;
+            autoCountDisplay.innerText = autoClickers;
+            upgradeBtn.innerText = `Buy Auto-Clicker (Cost: ${upgradeCost})`;
+            
+            // Enable or disable upgrade button based on current score
+            if (score >= upgradeCost) {
+                upgradeBtn.disabled = false;
+            } else {
+                upgradeBtn.disabled = true;
+            }
+        }
+
+        // 4. Passive Game Loop (Runs automatically every second)
+        setInterval(() => {
+            if (autoClickers > 0) {
+                score += autoClickers;
+                updateDisplay();
+            }
+        }, 1000);
+    </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Clicker Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1a1a1a;
+            color: #f1f1f1;
+            padding-top: 50px;
+        }
+
+        .game-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #2a2a2a;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        /* Image Clicker Styling */
+        .image-clicker-container {
+            display: inline-block;
+            cursor: pointer;
+            user-select: none;
+            outline: none;
+            transition: transform 0.1s;
+            margin: 20px 0;
+        }
+
+        .clicker-img {
+            max-width: 200px;
+            max-height: 200px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 10px;
+            /* Optional: Add a subtle shadow glow to make it stand out */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: filter 0.2s;
+        }
+
+        .image-clicker-container:hover .clicker-img {
+            filter: brightness(1.1); /* Light up slightly on hover */
+        }
+
+        .image-clicker-container:active {
+            transform: scale(0.92); /* Shrink slightly when clicked */
+        }
+
+        /* Shop Upgrade Button */
+        .upgrade-btn {
+            margin-top: 30px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+
+        .upgrade-btn:hover {
+            background-color: #218838;
+        }
+
+        .upgrade-btn:disabled {
+            background-color: #555;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .stats {
+            margin-top: 15px;
+            color: #aaa;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Score: <span id="score">0</span></h1>
+        
+        <!-- Main Image Clicker Target -->
+        <div id="click-target" class="image-clicker-container">
+            <!-- ⚠️ REPLACE 'your-character-image.png' WITH YOUR ACTUAL IMAGE FILE NAME OR URL -->
+            <img src="your-character-image.png" alt="Click Target" class="clicker-img">
+        </div>
+        
+        <br>
+        
+        <!-- Auto Clicker Upgrade -->
+        <button id="upgrade-btn" class="upgrade-btn" disabled>
+            Buy Auto-Clicker (Cost: 10)
+        </button>
+        
+        <div class="stats">
+            Auto-Clickers Owned: <span id="auto-count">0</span>
+        </div>
+    </div>
+
+    <script>
+        // --- GAME STATE ---
+        let score = 0;
+        let autoClickers = 0;
+        let upgradeCost = 10;
+
+        // --- DOM ELEMENTS ---
+        const scoreDisplay = document.getElementById('score');
+        const clickTarget = document.getElementById('click-target');
+        const upgradeBtn = document.getElementById('upgrade-btn');
+        const autoCountDisplay = document.getElementById('auto-count');
+
+        // --- CORE LOGIC ---
+
+        // 1. Image Click
+        clickTarget.addEventListener('click', () => {
             score++;
             updateDisplay();
         });
