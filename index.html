@@ -226,6 +226,60 @@
             color: #ccc;
             white-space: pre-wrap;
         }
+
+        /* ---------- ANGRY JESUS EVENT ---------- */
+
+        /* Crosses the whole screen from left to right */
+        .angry-jesus {
+            position: fixed;
+            left: -170px;
+            width: 140px;
+            height: 140px;
+            z-index: 1000;
+            cursor: pointer;
+            user-select: none;
+            animation-name: angry-cross;
+            animation-timing-function: linear;
+            animation-fill-mode: forwards;
+        }
+
+        @keyframes angry-cross {
+            from { left: -170px; }
+            to   { left: 100vw; }
+        }
+
+        .angry-jesus img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 12px rgba(255, 0, 0, 0.8));
+            animation: angry-wobble 0.5s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+
+        @keyframes angry-wobble {
+            from { transform: rotate(-8deg) translateY(-6px); }
+            to   { transform: rotate(8deg) translateY(6px); }
+        }
+
+        /* Floating "+N" / "-N" text */
+        .float-text {
+            position: fixed;
+            z-index: 1001;
+            font-size: 28px;
+            font-weight: bold;
+            pointer-events: none;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+            animation: float-up 1.6s ease-out forwards;
+        }
+
+        .float-text.gain { color: #7CFC9A; }
+        .float-text.loss { color: #ff5a5a; }
+
+        @keyframes float-up {
+            from { opacity: 1; transform: translateY(0); }
+            to   { opacity: 0; transform: translateY(-80px); }
+        }
     </style>
 </head>
 <body>
@@ -258,6 +312,12 @@
                 <div class="upgrade-box-list" id="other-upgrades"></div>
             </div>
 
+            <!-- Event upgrades box (bottom) -->
+            <div class="upgrade-box">
+                <div class="upgrade-box-title">Event Upgrades</div>
+                <div class="upgrade-box-list" id="event-upgrades"></div>
+            </div>
+
         </div>
 
         <!-- Description box (right of the upgrades) -->
@@ -275,6 +335,16 @@
             '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">' +
             '<rect width="64" height="64" rx="8" fill="#555"/>' +
             '<text x="32" y="42" font-size="30" text-anchor="middle" fill="#ddd" font-family="Arial">?</text>' +
+            '</svg>'
+        );
+
+        // Placeholder for the Angry Jesus himself (red face)
+        const ANGRY_FALLBACK = "data:image/svg+xml;utf8," + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140">' +
+            '<circle cx="70" cy="70" r="64" fill="#c0392b" stroke="#7b1e14" stroke-width="6"/>' +
+            '<path d="M32 46 L58 58 M108 46 L82 58" stroke="#fff" stroke-width="8" stroke-linecap="round"/>' +
+            '<circle cx="48" cy="68" r="8" fill="#fff"/><circle cx="92" cy="68" r="8" fill="#fff"/>' +
+            '<path d="M46 108 Q70 88 94 108" stroke="#fff" stroke-width="8" fill="none" stroke-linecap="round"/>' +
             '</svg>'
         );
 
@@ -310,12 +380,20 @@
             return n.toLocaleString();
         }
 
+        // --- ANGRY JESUS SETTINGS ---
+        const ANGRY_IMG = 'angryjesus.png';   // <- replace with your own image
+        const EVENT_MIN_MS = 45000;           // earliest he can appear after the last one
+        const EVENT_MAX_MS = 90000;           // latest he can appear
+        const CROSS_TIME_SEC = 6;             // how long he takes to cross the screen
+        const PENALTY_PERCENT = 0.10;         // 10% lost if you miss him
+        const REWARD_PER_LEVEL = 20;          // x click value paid per level (level 0 still pays 1 level)
+
         // --- DESCRIPTION BOX TEXT ---
         // Shown when you aren't hovering over an upgrade
         const DEFAULT_DESCRIPTION = "the squishiest descriptions. me dropping 325 roses ima take myself to court.";
 
         // --- UPGRADE LIST ---
-        // section: 'click' = top box, 'other' = bottom box
+        // section: 'click' = top box, 'other' = middle box, 'event' = bottom box
         // growth: how much the cost multiplies after each purchase
         // description: the text shown in the description box on hover
         const UPGRADES = [
@@ -342,8 +420,22 @@
                 description: 'straight from mexico',
                 baseCost: 10, growth: 1.5, startLevel: 0,
                 levelKey: 'clicker_autos', costKey: 'clicker_cost'
+            },
+            {
+                id: 'angryloot', section: 'event',
+                name: 'angry loot', img: 'angryloot.png',
+                levelLabel: 'Level', desc: 'more jesuslings from angry jesus',
+                description: 'Description coming soon...',
+                baseCost: 200, growth: 2, startLevel: 0,
+                levelKey: 'clicker_angryloot', costKey: 'clicker_angryloot_cost'
             }
         ];
+
+        const SECTION_CONTAINERS = {
+            click: 'click-upgrades',
+            other: 'other-upgrades',
+            event: 'event-upgrades'
+        };
 
         // --- GAME STATE ---
         let jesuslings = parseInt(localStorage.getItem('clicker_jesuslings')) || 0;
@@ -367,6 +459,11 @@
         // Jesuslings gained per second
         function perSecond() {
             return getUpgrade('auto').level;
+        }
+
+        // Jesuslings you get for popping Angry Jesus
+        function angryReward() {
+            return clickValue() * REWARD_PER_LEVEL * (1 + getUpgrade('angryloot').level);
         }
 
         // --- DOM ELEMENTS ---
@@ -429,8 +526,7 @@
             u.btn = btn;
 
             item.appendChild(btn);
-            const container = document.getElementById(u.section === 'click' ? 'click-upgrades' : 'other-upgrades');
-            container.appendChild(item);
+            document.getElementById(SECTION_CONTAINERS[u.section]).appendChild(item);
         });
 
         updateDisplay();
@@ -485,6 +581,80 @@
                 updateDisplay();
             }
         }
+
+        // --- ANGRY JESUS EVENT ---
+
+        let angryActive = false;
+
+        function floatText(message, x, y, kind) {
+            const el = document.createElement('div');
+            el.className = `float-text ${kind}`;
+            el.innerText = message;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1700);
+        }
+
+        function spawnAngryJesus() {
+            if (angryActive) return;
+            angryActive = true;
+
+            const el = document.createElement('div');
+            el.className = 'angry-jesus';
+            // random height, kept inside the visible screen
+            const maxTop = Math.max(window.innerHeight - 180, 20);
+            el.style.top = `${Math.floor(20 + Math.random() * maxTop)}px`;
+            el.style.animationDuration = `${CROSS_TIME_SEC}s`;
+
+            const img = document.createElement('img');
+            img.alt = 'Angry Jesus';
+            img.onerror = () => { img.onerror = null; img.src = ANGRY_FALLBACK; };
+            img.src = ANGRY_IMG;
+            el.appendChild(img);
+
+            let resolved = false;
+
+            // Popped him!
+            el.addEventListener('click', (e) => {
+                if (resolved) return;
+                resolved = true;
+                const reward = angryReward();
+                jesuslings += reward;
+                floatText(`+${formatNumber(reward)}`, e.clientX - 30, e.clientY - 20, 'gain');
+                el.remove();
+                saveGame();
+                updateDisplay();
+                finishEvent();
+            });
+
+            // He made it across the screen: lose 10%
+            el.addEventListener('animationend', () => {
+                if (resolved) return;
+                resolved = true;
+                const lost = Math.floor(jesuslings * PENALTY_PERCENT);
+                jesuslings -= lost;
+                floatText(`-${formatNumber(lost)}`, window.innerWidth - 200, el.getBoundingClientRect().top, 'loss');
+                el.remove();
+                saveGame();
+                updateDisplay();
+                finishEvent();
+            });
+
+            document.body.appendChild(el);
+        }
+
+        function finishEvent() {
+            angryActive = false;
+            scheduleAngryJesus();
+        }
+
+        function scheduleAngryJesus() {
+            const wait = EVENT_MIN_MS + Math.random() * (EVENT_MAX_MS - EVENT_MIN_MS);
+            setTimeout(spawnAngryJesus, wait);
+        }
+
+        scheduleAngryJesus();
 
         // Passive game loop
         setInterval(() => {
