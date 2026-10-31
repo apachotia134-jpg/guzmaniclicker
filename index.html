@@ -7,24 +7,56 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
             background-color: #1a1a1a;
             color: #f1f1f1;
             padding-top: 50px;
+            display: flex;
+            justify-content: center;
         }
 
+        /* Widened container to hold side-by-side elements nicely */
         .game-container {
-            max-width: 400px;
-            margin: 0 auto;
+            width: 600px;
+            max-width: 90%;
             background-color: #2a2a2a;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
         }
 
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
+        /* Left Side: Clicker Area */
+        .left-panel {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Right Side: Stats and Upgrades */
+        .right-panel {
+            flex: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Split-level jesuslings layout */
+        .jesuslings-title {
+            font-size: 2.2rem;
+            margin: 0 0 5px 0;
+            font-weight: bold;
+        }
+
+        .jesuslings-number {
+            font-size: 3rem;
+            margin: 0 0 20px 0;
+            color: #a0dce4;
+            font-weight: bold;
         }
 
         /* Pure Image Clicker (No background box) */
@@ -34,13 +66,12 @@
             user-select: none;
             outline: none;
             transition: transform 0.1s;
-            margin: 20px 0;
-            background: transparent; /* Ensures no background box reveals */
+            background: transparent;
         }
 
         .clicker-img {
-            max-width: 200px;
-            max-height: 200px;
+            max-width: 220px;
+            max-height: 220px;
             width: auto;
             height: auto;
             object-fit: contain;
@@ -48,16 +79,17 @@
         }
 
         .image-clicker-container:hover .clicker-img {
-            filter: brightness(1.15); /* Brighten image slightly on hover */
+            filter: brightness(1.15);
         }
 
         .image-clicker-container:active {
-            transform: scale(0.92); /* Shrink the image slightly when clicked */
+            transform: scale(0.92);
         }
 
         /* Shop Upgrade Button */
         .upgrade-btn {
-            margin-top: 30px;
+            width: 100%;
+            max-width: 220px;
             padding: 12px 24px;
             font-size: 16px;
             cursor: pointer;
@@ -85,7 +117,7 @@
         }
         
         .reset-btn {
-            margin-top: 20px;
+            margin-top: 25px;
             background: none;
             border: none;
             color: #dc3545;
@@ -98,25 +130,31 @@
 <body>
 
     <div class="game-container">
-        <h1>jesuslings: <span id="jesuslings">0</span></h1>
         
-        <!-- Main Transparent Image Clicker Target -->
-        <div id="click-target" class="image-clicker-container">
-            <img src="ppzeus.png" alt="Click Target" class="clicker-img">
+        <!-- LEFT PANEL: Image Clicker Area -->
+        <div class="left-panel">
+            <div id="click-target" class="image-clicker-container">
+                <img src="ppzeus.png" alt="Click Target" class="clicker-img">
+            </div>
         </div>
         
-        <br>
-        
-        <!-- Auto Clicker Upgrade -->
-        <button id="upgrade-btn" class="upgrade-btn" disabled>
-            Buy Auto-Clicker (Cost: 10)
-        </button>
-        
-        <div class="stats">
-            Auto-Clickers Owned: <span id="auto-count">0</span>
+        <!-- RIGHT PANEL: jesuslings, Stats, and Upgrades -->
+        <div class="right-panel">
+            <div class="jesuslings-title">jesuslings</div>
+            <div class="jesuslings-number" id="jesuslings">0</div>
+            
+            <!-- Auto Clicker Upgrade -->
+            <button id="upgrade-btn" class="upgrade-btn" disabled>
+                Buy Auto-Clicker (Cost: 10)
+            </button>
+            
+            <div class="stats">
+                Auto-Clickers Owned: <span id="auto-count">0</span>
+            </div>
+
+            <button class="reset-btn" onclick="resetGame()">Reset Game Data</button>
         </div>
 
-        <button class="reset-btn" onclick="resetGame()">Reset Game Data</button>
     </div>
 
     <script>
