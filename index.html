@@ -25,8 +25,6 @@
             display: flex;
             overflow: hidden;
         }
-
-        /* LEFT: clicking area */
         .left-panel {
             flex: 1;
             display: flex;
@@ -86,7 +84,7 @@
             font-size: 12px;
         }
 
-        /* RIGHT: upgrades area, runs top to bottom */
+       
         .upgrades-panel {
             width: 280px;
             background-color: #222;
@@ -137,7 +135,6 @@
             cursor: not-allowed;
         }
 
-        /* Small upgrade image: swap the src in the HTML for your own */
         .upgrade-icon {
             width: 48px;
             height: 48px;
@@ -173,8 +170,6 @@
 <body>
 
     <div class="game-container">
-
-        <!-- LEFT: clicking area -->
         <div class="left-panel">
             <div class="jesuslings-title">jesuslings</div>
             <div class="jesuslings-number" id="jesuslings">0</div>
@@ -186,12 +181,10 @@
             <button class="reset-btn" onclick="resetGame()">Reset Game Data</button>
         </div>
 
-        <!-- RIGHT: upgrades, top to bottom -->
         <div class="upgrades-panel">
             <div class="upgrades-header">Upgrades</div>
             <div class="upgrades-list">
 
-                <!-- Auto-Clicker: replace jesusslaves.png with your own image -->
                 <button id="upgrade-btn" class="upgrade-btn" disabled>
                     <img class="upgrade-icon" src="jesusslaves.png" alt="" onerror="useFallbackIcon(this)">
                     <span class="upgrade-text">
@@ -200,7 +193,6 @@
                     </span>
                 </button>
 
-                <!-- Click Power: replace powerman.png with your own image -->
                 <button id="power-btn" class="upgrade-btn" disabled>
                     <img class="upgrade-icon" src="powerman.png" alt="" onerror="useFallbackIcon(this)">
                     <span class="upgrade-text">
@@ -209,7 +201,7 @@
                     </span>
                 </button>
 
-                <!-- Add more upgrade buttons here -->
+
             </div>
         </div>
 
