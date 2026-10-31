@@ -5,29 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>guzmaniclicker</title>
     <style>
+        html, body {
+            height: 100%;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background-color: #1a1a1a;
             color: #f1f1f1;
             margin: 0;
-            padding-top: 40px;
-            display: flex;
-            justify-content: center;
+            padding: 0;
+            overflow: hidden;
         }
 
+        /* Fills the whole screen */
         .game-container {
-            width: 1020px;
-            max-width: 98%;
-            height: 560px;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
             background-color: #2a2a2a;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             display: flex;
             overflow: hidden;
         }
 
         .left-panel {
             flex: 1;
+            min-width: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -40,21 +43,21 @@
         /* Small "per click" number in the corner */
         .per-click {
             position: absolute;
-            top: 12px;
-            left: 14px;
-            font-size: 13px;
+            top: 14px;
+            left: 16px;
+            font-size: 14px;
             color: #a0dce4;
             opacity: 0.9;
         }
 
         .jesuslings-title {
-            font-size: 2.2rem;
+            font-size: 2.6rem;
             margin: 0 0 5px 0;
             font-weight: bold;
         }
 
         .jesuslings-number {
-            font-size: 3rem;
+            font-size: 3.6rem;
             margin: 0 0 20px 0;
             color: #a0dce4;
             font-weight: bold;
@@ -75,9 +78,10 @@
             background: transparent;
         }
 
+        /* Image grows with the window height */
         .clicker-img {
-            max-width: 220px;
-            max-height: 220px;
+            max-width: min(360px, 42vh);
+            max-height: min(360px, 42vh);
             width: auto;
             height: auto;
             object-fit: contain;
@@ -104,7 +108,8 @@
 
         /* MIDDLE: upgrades column */
         .upgrades-panel {
-            width: 290px;
+            width: 340px;
+            flex-shrink: 0;
             background-color: #222;
             border-left: 1px solid #444;
             padding: 12px;
@@ -195,7 +200,8 @@
 
         /* RIGHT: description box */
         .description-panel {
-            width: 260px;
+            width: 300px;
+            flex-shrink: 0;
             background-color: #222;
             border-left: 1px solid #444;
             padding: 12px;
