@@ -114,13 +114,16 @@
 
         .upgrade-btn {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             cursor: pointer;
             background-color: #28a745;
             color: white;
             border: none;
             border-radius: 5px;
             text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             transition: background-color 0.2s;
         }
 
@@ -132,6 +135,25 @@
             background-color: #444;
             color: #999;
             cursor: not-allowed;
+        }
+
+        /* Small upgrade image: swap the src in the HTML for your own */
+        .upgrade-icon {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            object-fit: contain;
+            border-radius: 4px;
+            background: rgba(0,0,0,0.25);
+        }
+
+        .upgrade-btn:disabled .upgrade-icon {
+            filter: grayscale(1);
+            opacity: 0.6;
+        }
+
+        .upgrade-text {
+            display: block;
         }
 
         .upgrade-name {
@@ -169,14 +191,22 @@
             <div class="upgrades-header">Upgrades</div>
             <div class="upgrades-list">
 
+                <!-- Auto-Clicker: replace upgrade-auto.png with your own image -->
                 <button id="upgrade-btn" class="upgrade-btn" disabled>
-                    <span class="upgrade-name" id="auto-name">Auto-Clicker</span>
-                    <span class="upgrade-info" id="auto-info"></span>
+                    <img class="upgrade-icon" src="upgrade-auto.png" alt="" onerror="useFallbackIcon(this)">
+                    <span class="upgrade-text">
+                        <span class="upgrade-name" id="auto-name">Auto-Clicker</span>
+                        <span class="upgrade-info" id="auto-info"></span>
+                    </span>
                 </button>
 
+                <!-- Click Power: replace upgrade-power.png with your own image -->
                 <button id="power-btn" class="upgrade-btn" disabled>
-                    <span class="upgrade-name" id="power-name">Click Power</span>
-                    <span class="upgrade-info" id="power-info"></span>
+                    <img class="upgrade-icon" src="upgrade-power.png" alt="" onerror="useFallbackIcon(this)">
+                    <span class="upgrade-text">
+                        <span class="upgrade-name" id="power-name">Click Power</span>
+                        <span class="upgrade-info" id="power-info"></span>
+                    </span>
                 </button>
 
                 <!-- Add more upgrade buttons here -->
@@ -186,6 +216,19 @@
     </div>
 
     <script>
+        // --- PLACEHOLDER ICON (shown when your image file isn't found) ---
+        const FALLBACK_ICON = "data:image/svg+xml;utf8," + encodeURIComponent(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">' +
+            '<rect width="64" height="64" rx="8" fill="#555"/>' +
+            '<text x="32" y="42" font-size="30" text-anchor="middle" fill="#ddd" font-family="Arial">?</text>' +
+            '</svg>'
+        );
+
+        function useFallbackIcon(img) {
+            img.onerror = null; // prevent an endless error loop
+            img.src = FALLBACK_ICON;
+        }
+
         // --- GAME STATE ---
         let jesuslings = parseInt(localStorage.getItem('clicker_jesuslings')) || 0;
         let autoClickers = parseInt(localStorage.getItem('clicker_autos')) || 0;
