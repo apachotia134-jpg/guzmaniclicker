@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -27,7 +27,7 @@
             margin-bottom: 20px;
         }
 
-        /* Image Clicker Styling */
+        /* Pure Image Clicker (No background box) */
         .image-clicker-container {
             display: inline-block;
             cursor: pointer;
@@ -35,6 +35,7 @@
             outline: none;
             transition: transform 0.1s;
             margin: 20px 0;
+            background: transparent; /* Ensures no background box reveals */
         }
 
         .clicker-img {
@@ -43,17 +44,15 @@
             width: auto;
             height: auto;
             object-fit: contain;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             transition: filter 0.2s;
         }
 
         .image-clicker-container:hover .clicker-img {
-            filter: brightness(1.1); /* Light up slightly on hover */
+            filter: brightness(1.15); /* Brighten image slightly on hover */
         }
 
         .image-clicker-container:active {
-            transform: scale(0.92); /* Shrink slightly when clicked */
+            transform: scale(0.92); /* Shrink the image slightly when clicked */
         }
 
         /* Shop Upgrade Button */
@@ -101,7 +100,7 @@
     <div class="game-container">
         <h1>Score: <span id="score">0</span></h1>
         
-        <!-- Main Image Clicker Target -->
+        <!-- Main Transparent Image Clicker Target -->
         <div id="click-target" class="image-clicker-container">
             <img src="ppzeus.png" alt="Click Target" class="clicker-img">
         </div>
@@ -121,7 +120,7 @@
     </div>
 
     <script>
-        // --- GAME STATE (Loads saved progress or uses defaults) ---
+        // --- GAME STATE ---
         let score = parseInt(localStorage.getItem('clicker_score')) || 0;
         let autoClickers = parseInt(localStorage.getItem('clicker_autos')) || 0;
         let upgradeCost = parseInt(localStorage.getItem('clicker_cost')) || 10;
@@ -150,7 +149,6 @@
                 score -= upgradeCost;
                 autoClickers++;
                 
-                // Increase the price scale for the next upgrade (multiplied by 1.5)
                 upgradeCost = Math.round(upgradeCost * 1.5); 
                 
                 saveGame();
@@ -164,7 +162,6 @@
             autoCountDisplay.innerText = autoClickers;
             upgradeBtn.innerText = `Buy Auto-Clicker (Cost: ${upgradeCost})`;
             
-            // Enable or disable upgrade button based on current score
             if (score >= upgradeCost) {
                 upgradeBtn.disabled = false;
             } else {
@@ -190,7 +187,7 @@
             }
         }
 
-        // 6. Passive Game Loop (Runs automatically every second)
+        // 6. Passive Game Loop
         setInterval(() => {
             if (autoClickers > 0) {
                 score += autoClickers;
