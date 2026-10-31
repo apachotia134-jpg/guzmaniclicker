@@ -98,7 +98,7 @@
 <body>
 
     <div class="game-container">
-        <h1>Score: <span id="score">0</span></h1>
+        <h1>jesuslings: <span id="jesuslings">0</span></h1>
         
         <!-- Main Transparent Image Clicker Target -->
         <div id="click-target" class="image-clicker-container">
@@ -121,12 +121,12 @@
 
     <script>
         // --- GAME STATE ---
-        let score = parseInt(localStorage.getItem('clicker_score')) || 0;
+        let jesuslings = parseInt(localStorage.getItem('clicker_jesuslings')) || 0;
         let autoClickers = parseInt(localStorage.getItem('clicker_autos')) || 0;
         let upgradeCost = parseInt(localStorage.getItem('clicker_cost')) || 10;
 
         // --- DOM ELEMENTS ---
-        const scoreDisplay = document.getElementById('score');
+        const jesuslingsDisplay = document.getElementById('jesuslings');
         const clickTarget = document.getElementById('click-target');
         const upgradeBtn = document.getElementById('upgrade-btn');
         const autoCountDisplay = document.getElementById('auto-count');
@@ -138,15 +138,15 @@
 
         // 1. Image Click
         clickTarget.addEventListener('click', () => {
-            score++;
+            jesuslings++;
             saveGame();
             updateDisplay();
         });
 
         // 2. Buy Auto-Clicker Upgrade
         upgradeBtn.addEventListener('click', () => {
-            if (score >= upgradeCost) {
-                score -= upgradeCost;
+            if (jesuslings >= upgradeCost) {
+                jesuslings -= upgradeCost;
                 autoClickers++;
                 
                 upgradeCost = Math.round(upgradeCost * 1.5); 
@@ -158,11 +158,11 @@
 
         // 3. Keep visual elements synchronized
         function updateDisplay() {
-            scoreDisplay.innerText = score;
+            jesuslingsDisplay.innerText = jesuslings;
             autoCountDisplay.innerText = autoClickers;
             upgradeBtn.innerText = `Buy Auto-Clicker (Cost: ${upgradeCost})`;
             
-            if (score >= upgradeCost) {
+            if (jesuslings >= upgradeCost) {
                 upgradeBtn.disabled = false;
             } else {
                 upgradeBtn.disabled = true;
@@ -171,16 +171,16 @@
 
         // 4. Save game parameters to local storage
         function saveGame() {
-            localStorage.setItem('clicker_score', score);
+            localStorage.setItem('clicker_jesuslings', jesuslings);
             localStorage.setItem('clicker_autos', autoClickers);
             localStorage.setItem('clicker_cost', upgradeCost);
         }
 
         // 5. Hard data reset
         function resetGame() {
-            if (confirm("Are you sure you want to reset your score?")) {
+            if (confirm("Are you sure you want to reset your jesuslings?")) {
                 localStorage.clear();
-                score = 0;
+                jesuslings = 0;
                 autoClickers = 0;
                 upgradeCost = 10;
                 updateDisplay();
@@ -190,7 +190,7 @@
         // 6. Passive Game Loop
         setInterval(() => {
             if (autoClickers > 0) {
-                score += autoClickers;
+                jesuslings += autoClickers;
                 saveGame();
                 updateDisplay();
             }
