@@ -281,43 +281,6 @@
             to   { transform: rotate(8deg) translateY(6px); }
         }
 
-        /* ---------- LEECH EVENT ---------- */
-
-        /* Sits still where it spawned until you pop it */
-        .leech {
-            position: fixed;
-            width: 80px;
-            height: 80px;
-            z-index: 999;
-            cursor: pointer;
-            user-select: none;
-            animation: leech-wiggle 0.6s ease-in-out infinite alternate;
-        }
-
-        .leech img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            filter: drop-shadow(0 0 8px rgba(120, 0, 0, 0.9));
-            pointer-events: none;
-        }
-
-        @keyframes leech-wiggle {
-            from { transform: rotate(-10deg); }
-            to   { transform: rotate(10deg); }
-        }
-
-        /* Quick swell each time it sucks */
-        .leech.sucking img {
-            animation: leech-pulse 0.4s ease-out;
-        }
-
-        @keyframes leech-pulse {
-            0%   { transform: scale(1); }
-            40%  { transform: scale(1.35); }
-            100% { transform: scale(1); }
-        }
-
         /* Floating "+N" / "-N" text */
         .float-text {
             position: fixed;
@@ -404,15 +367,6 @@
             '</svg>'
         );
 
-        // Placeholder for the leech (dark red body with a little face)
-        const LEECH_FALLBACK = "data:image/svg+xml;utf8," + encodeURIComponent(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">' +
-            '<path d="M14 66 Q28 28 50 50 T86 34" stroke="#5a0f14" stroke-width="26" fill="none" stroke-linecap="round"/>' +
-            '<path d="M14 66 Q28 28 50 50 T86 34" stroke="#8e1b22" stroke-width="16" fill="none" stroke-linecap="round"/>' +
-            '<circle cx="84" cy="32" r="4" fill="#fff"/><circle cx="90" cy="40" r="4" fill="#fff"/>' +
-            '</svg>'
-        );
-
         function useFallbackIcon(img) {
             img.onerror = null; // prevent an endless error loop
             img.src = FALLBACK_ICON;
@@ -452,14 +406,6 @@
         const CROSS_TIME_SEC = 6;             // how long he takes to cross the screen
         const PENALTY_PERCENT = 0.10;         // 10% lost if you miss him
         const REWARD_PER_LEVEL = 20;          // x click value paid per level (level 0 still pays 1 level)
-
-        // --- LEECH SETTINGS ---
-        const LEECH_IMG = 'leech.png';        // <- replace with your own image
-        const LEECH_MIN_MS = 120000;          // earliest the next leech can show up (2 min)
-        const LEECH_MAX_MS = 240000;          // latest the next leech can show up (4 min)
-        const LEECH_DRAIN_PERCENT = 0.02;     // 2% of your jesuslings per bite
-        const LEECH_DRAIN_EVERY_MS = 3000;    // a bite every 3 seconds until popped
-        const LEECH_MAX = 5;                  // most leeches that can be stuck on at once
 
         // --- DESCRIPTION BOX TEXT ---
         // Shown when you aren't hovering over an upgrade
@@ -655,7 +601,9 @@
             }
         }
 
-        // --- SHARED: FLOATING TEXT ---
+        // --- ANGRY JESUS EVENT ---
+
+        let angryActive = false;
 
         function floatText(message, x, y, kind) {
             const el = document.createElement('div');
@@ -666,10 +614,6 @@
             document.body.appendChild(el);
             setTimeout(() => el.remove(), 1700);
         }
-
-        // --- ANGRY JESUS EVENT ---
-
-        let angryActive = false;
 
         function spawnAngryJesus() {
             if (angryActive) return;
@@ -730,66 +674,6 @@
         }
 
         scheduleAngryJesus();
-
-        // --- LEECH EVENT ---
-
-        let leechCount = 0;
-
-        // Puts one leech on screen. You can run createLeech() in the console to test.
-        function createLeech() {
-            if (leechCount >= LEECH_MAX) return;
-            leechCount++;
-
-            const el = document.createElement('div');
-            el.className = 'leech';
-            // random spot, kept inside the visible screen
-            const maxLeft = Math.max(window.innerWidth - 120, 20);
-            const maxTop = Math.max(window.innerHeight - 120, 20);
-            el.style.left = `${Math.floor(20 + Math.random() * maxLeft)}px`;
-            el.style.top = `${Math.floor(20 + Math.random() * maxTop)}px`;
-
-            const img = document.createElement('img');
-            img.alt = 'Leech';
-            img.onerror = () => { img.onerror = null; img.src = LEECH_FALLBACK; };
-            img.src = LEECH_IMG;
-            el.appendChild(img);
-
-            // Bites you every few seconds until it's popped
-            const drainTimer = setInterval(() => {
-                if (jesuslings < 1) return;
-                const lost = Math.max(1, Math.floor(jesuslings * LEECH_DRAIN_PERCENT));
-                jesuslings -= lost;
-                const rect = el.getBoundingClientRect();
-                floatText(`-${formatNumber(lost)}`, rect.left, rect.top - 10, 'loss');
-                el.classList.add('sucking');
-                setTimeout(() => el.classList.remove('sucking'), 400);
-                saveGame();
-                updateDisplay();
-            }, LEECH_DRAIN_EVERY_MS);
-
-            // Popped it!
-            el.addEventListener('click', (e) => {
-                clearInterval(drainTimer);
-                el.remove();
-                leechCount--;
-                floatText('pop!', e.clientX - 20, e.clientY - 20, 'gain');
-            });
-
-            document.body.appendChild(el);
-        }
-
-        // Rare: waits a few minutes, adds a leech, then waits again
-        function spawnLeech() {
-            createLeech();
-            scheduleLeech();
-        }
-
-        function scheduleLeech() {
-            const wait = LEECH_MIN_MS + Math.random() * (LEECH_MAX_MS - LEECH_MIN_MS);
-            setTimeout(spawnLeech, wait);
-        }
-
-        scheduleLeech();
 
         // Passive game loop
         setInterval(() => {
