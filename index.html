@@ -16,8 +16,8 @@
         }
 
         .game-container {
-            width: 760px;
-            max-width: 95%;
+            width: 1020px;
+            max-width: 98%;
             height: 560px;
             background-color: #2a2a2a;
             border-radius: 10px;
@@ -96,7 +96,7 @@
             font-size: 12px;
         }
 
-        /* RIGHT: upgrades column */
+        /* MIDDLE: upgrades column */
         .upgrades-panel {
             width: 290px;
             background-color: #222;
@@ -186,6 +186,40 @@
             margin-top: 4px;
             opacity: 0.85;
         }
+
+        /* RIGHT: description box */
+        .description-panel {
+            width: 260px;
+            background-color: #222;
+            border-left: 1px solid #444;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .description-box {
+            flex: 1;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background-color: #2a2a2a;
+            padding: 14px;
+            overflow-y: auto;
+        }
+
+        .description-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #444;
+        }
+
+        .description-text {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #ccc;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body>
@@ -219,6 +253,14 @@
             </div>
 
         </div>
+
+        <!-- Description box (right of the upgrades) -->
+        <div class="description-panel">
+            <div class="description-box">
+                <div class="description-title" id="description-title">Description</div>
+                <div class="description-text" id="description-text"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -235,14 +277,20 @@
             img.src = FALLBACK_ICON;
         }
 
+        // --- DESCRIPTION BOX TEXT ---
+        // Shown when you aren't hovering over an upgrade
+        const DEFAULT_DESCRIPTION = "Hover over an upgrade to see its description.";
+
         // --- UPGRADE LIST ---
         // section: 'click' = top box, 'other' = bottom box
         // growth: how much the cost multiplies after each purchase
+        // description: the text shown in the description box on hover
         const UPGRADES = [
             {
                 id: 'power', section: 'click',
                 name: 'jesus impact', img: 'powerman.png',
                 levelLabel: 'Level', desc: '+1 per click',
+                description: 'Description coming soon...',
                 baseCost: 50, growth: 2, startLevel: 1,
                 levelKey: 'clicker_power', costKey: 'clicker_power_cost'
             },
@@ -250,6 +298,7 @@
                 id: 'blessing', section: 'click',
                 name: 'jesus blessing', img: 'atruesaint.png',
                 levelLabel: 'Level', desc: 'x2 click value',
+                description: 'Description coming soon...',
                 baseCost: 500, growth: 3, startLevel: 0,
                 levelKey: 'clicker_blessing', costKey: 'clicker_blessing_cost'
             },
@@ -257,6 +306,7 @@
                 id: 'auto', section: 'other',
                 name: 'jesus slaves', img: 'jesusslaves.png',
                 levelLabel: 'Owned', desc: '+1 per second each',
+                description: 'Description coming soon...',
                 baseCost: 10, growth: 1.5, startLevel: 0,
                 levelKey: 'clicker_autos', costKey: 'clicker_cost'
             }
@@ -286,12 +336,30 @@
             return getUpgrade('auto').level;
         }
 
-        // --- BUILD THE UPGRADE BUTTONS ---
+        // --- DOM ELEMENTS ---
         const clickTarget = document.getElementById('click-target');
         const jesuslingsDisplay = document.getElementById('jesuslings');
         const perClickDisplay = document.getElementById('per-click');
+        const descTitle = document.getElementById('description-title');
+        const descText = document.getElementById('description-text');
 
+        function showDescription(u) {
+            if (u) {
+                descTitle.innerText = u.name;
+                descText.innerText = u.description;
+            } else {
+                descTitle.innerText = 'Description';
+                descText.innerText = DEFAULT_DESCRIPTION;
+            }
+        }
+
+        showDescription(null);
+
+        // --- BUILD THE UPGRADE BUTTONS ---
         UPGRADES.forEach(u => {
+            // Wrapper so hover works even when the button is disabled
+            const item = document.createElement('div');
+
             const btn = document.createElement('button');
             btn.className = 'upgrade-btn';
             btn.disabled = true;
@@ -316,10 +384,13 @@
             btn.appendChild(text);
 
             btn.addEventListener('click', () => buyUpgrade(u));
+            item.addEventListener('mouseenter', () => showDescription(u));
+            item.addEventListener('mouseleave', () => showDescription(null));
             u.btn = btn;
 
+            item.appendChild(btn);
             const container = document.getElementById(u.section === 'click' ? 'click-upgrades' : 'other-upgrades');
-            container.appendChild(btn);
+            container.appendChild(item);
         });
 
         updateDisplay();
