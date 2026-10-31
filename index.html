@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>guzmaniclicker</title>
     <style>
+        :root {
+            --icon-size: 56px;   /* size of every upgrade icon (width and height) */
+        }
+
         html, body {
             height: 100%;
         }
@@ -167,12 +171,21 @@
             cursor: not-allowed;
         }
 
+        /* Every icon is locked to the same square, whatever the image size.
+           "cover" fills the whole square and crops any extra from the edges.
+           Change cover to contain if you'd rather see the whole image with gaps. */
         .upgrade-icon {
-            width: 48px;
-            height: 48px;
-            flex-shrink: 0;
-            object-fit: contain;
-            border-radius: 4px;
+            display: block;
+            width: var(--icon-size);
+            height: var(--icon-size);
+            min-width: var(--icon-size);
+            min-height: var(--icon-size);
+            max-width: var(--icon-size);
+            max-height: var(--icon-size);
+            flex: 0 0 var(--icon-size);
+            object-fit: cover;
+            object-position: center;
+            border-radius: 6px;
             background: rgba(0,0,0,0.25);
         }
 
