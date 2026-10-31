@@ -9,43 +9,34 @@
             font-family: Arial, sans-serif;
             background-color: #1a1a1a;
             color: #f1f1f1;
-            padding-top: 50px;
+            margin: 0;
+            padding-top: 40px;
             display: flex;
             justify-content: center;
         }
 
-        /* Widened container to hold side-by-side elements nicely */
         .game-container {
-            width: 600px;
-            max-width: 90%;
+            width: 760px;
+            max-width: 95%;
+            height: 520px;
             background-color: #2a2a2a;
-            padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
+            overflow: hidden;
         }
 
-        /* Left Side: Clicker Area */
+        /* LEFT: clicking area */
         .left-panel {
             flex: 1;
             display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* Right Side: Stats and Upgrades */
-        .right-panel {
-            flex: 1;
-            text-align: center;
-            display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
         }
 
-        /* Split-level jesuslings layout */
         .jesuslings-title {
             font-size: 2.2rem;
             margin: 0 0 5px 0;
@@ -59,7 +50,6 @@
             font-weight: bold;
         }
 
-        /* Pure Image Clicker (No background box) */
         .image-clicker-container {
             display: inline-block;
             cursor: pointer;
@@ -86,36 +76,6 @@
             transform: scale(0.92);
         }
 
-        /* Shop Upgrade Button */
-        .upgrade-btn {
-            width: 100%;
-            max-width: 220px;
-            padding: 12px 24px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            transition: background-color 0.2s;
-        }
-
-        .upgrade-btn:hover {
-            background-color: #218838;
-        }
-
-        .upgrade-btn:disabled {
-            background-color: #555;
-            color: #aaa;
-            cursor: not-allowed;
-        }
-
-        .stats {
-            margin-top: 15px;
-            color: #aaa;
-            font-size: 14px;
-        }
-        
         .reset-btn {
             margin-top: 25px;
             background: none;
@@ -125,34 +85,102 @@
             text-decoration: underline;
             font-size: 12px;
         }
+
+        /* RIGHT: upgrades area, runs top to bottom */
+        .upgrades-panel {
+            width: 280px;
+            background-color: #222;
+            border-left: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .upgrades-header {
+            padding: 16px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #444;
+        }
+
+        .upgrades-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .upgrade-btn {
+            width: 100%;
+            padding: 12px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-align: left;
+            transition: background-color 0.2s;
+        }
+
+        .upgrade-btn:hover:not(:disabled) {
+            background-color: #218838;
+        }
+
+        .upgrade-btn:disabled {
+            background-color: #444;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .upgrade-name {
+            display: block;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .upgrade-info {
+            display: block;
+            font-size: 12px;
+            margin-top: 4px;
+            opacity: 0.85;
+        }
     </style>
 </head>
 <body>
 
     <div class="game-container">
-        
-        <!-- LEFT PANEL: Image Clicker Area -->
+
+        <!-- LEFT: clicking area -->
         <div class="left-panel">
+            <div class="jesuslings-title">jesuslings</div>
+            <div class="jesuslings-number" id="jesuslings">0</div>
+
             <div id="click-target" class="image-clicker-container">
                 <img src="ppzeus.png" alt="Click Target" class="clicker-img">
             </div>
-        </div>
-        
-        <!-- RIGHT PANEL: jesuslings, Stats, and Upgrades -->
-        <div class="right-panel">
-            <div class="jesuslings-title">jesuslings</div>
-            <div class="jesuslings-number" id="jesuslings">0</div>
-            
-            <!-- Auto Clicker Upgrade -->
-            <button id="upgrade-btn" class="upgrade-btn" disabled>
-                Buy Auto-Clicker (Cost: 10)
-            </button>
-            
-            <div class="stats">
-                Auto-Clickers Owned: <span id="auto-count">0</span>
-            </div>
 
             <button class="reset-btn" onclick="resetGame()">Reset Game Data</button>
+        </div>
+
+        <!-- RIGHT: upgrades, top to bottom -->
+        <div class="upgrades-panel">
+            <div class="upgrades-header">Upgrades</div>
+            <div class="upgrades-list">
+
+                <button id="upgrade-btn" class="upgrade-btn" disabled>
+                    <span class="upgrade-name" id="auto-name">Auto-Clicker</span>
+                    <span class="upgrade-info" id="auto-info"></span>
+                </button>
+
+                <button id="power-btn" class="upgrade-btn" disabled>
+                    <span class="upgrade-name" id="power-name">Click Power</span>
+                    <span class="upgrade-info" id="power-info"></span>
+                </button>
+
+                <!-- Add more upgrade buttons here -->
+            </div>
         </div>
 
     </div>
@@ -162,70 +190,82 @@
         let jesuslings = parseInt(localStorage.getItem('clicker_jesuslings')) || 0;
         let autoClickers = parseInt(localStorage.getItem('clicker_autos')) || 0;
         let upgradeCost = parseInt(localStorage.getItem('clicker_cost')) || 10;
+        let clickPower = parseInt(localStorage.getItem('clicker_power')) || 1;
+        let powerCost = parseInt(localStorage.getItem('clicker_power_cost')) || 50;
 
         // --- DOM ELEMENTS ---
         const jesuslingsDisplay = document.getElementById('jesuslings');
         const clickTarget = document.getElementById('click-target');
         const upgradeBtn = document.getElementById('upgrade-btn');
-        const autoCountDisplay = document.getElementById('auto-count');
+        const powerBtn = document.getElementById('power-btn');
+        const autoName = document.getElementById('auto-name');
+        const autoInfo = document.getElementById('auto-info');
+        const powerName = document.getElementById('power-name');
+        const powerInfo = document.getElementById('power-info');
 
-        // Initial setup on load
         updateDisplay();
 
         // --- CORE LOGIC ---
 
-        // 1. Image Click
         clickTarget.addEventListener('click', () => {
-            jesuslings++;
+            jesuslings += clickPower;
             saveGame();
             updateDisplay();
         });
 
-        // 2. Buy Auto-Clicker Upgrade
         upgradeBtn.addEventListener('click', () => {
             if (jesuslings >= upgradeCost) {
                 jesuslings -= upgradeCost;
                 autoClickers++;
-                
-                upgradeCost = Math.round(upgradeCost * 1.5); 
-                
+                upgradeCost = Math.round(upgradeCost * 1.5);
                 saveGame();
                 updateDisplay();
             }
         });
 
-        // 3. Keep visual elements synchronized
+        powerBtn.addEventListener('click', () => {
+            if (jesuslings >= powerCost) {
+                jesuslings -= powerCost;
+                clickPower++;
+                powerCost = Math.round(powerCost * 2);
+                saveGame();
+                updateDisplay();
+            }
+        });
+
         function updateDisplay() {
             jesuslingsDisplay.innerText = jesuslings;
-            autoCountDisplay.innerText = autoClickers;
-            upgradeBtn.innerText = `Buy Auto-Clicker (Cost: ${upgradeCost})`;
-            
-            if (jesuslings >= upgradeCost) {
-                upgradeBtn.disabled = false;
-            } else {
-                upgradeBtn.disabled = true;
-            }
+
+            autoName.innerText = `Auto-Clicker (Owned: ${autoClickers})`;
+            autoInfo.innerText = `Cost: ${upgradeCost}`;
+            upgradeBtn.disabled = jesuslings < upgradeCost;
+
+            powerName.innerText = `Click Power (Level: ${clickPower})`;
+            powerInfo.innerText = `Cost: ${powerCost}`;
+            powerBtn.disabled = jesuslings < powerCost;
         }
 
-        // 4. Save game parameters to local storage
         function saveGame() {
             localStorage.setItem('clicker_jesuslings', jesuslings);
             localStorage.setItem('clicker_autos', autoClickers);
             localStorage.setItem('clicker_cost', upgradeCost);
+            localStorage.setItem('clicker_power', clickPower);
+            localStorage.setItem('clicker_power_cost', powerCost);
         }
 
-        // 5. Hard data reset
         function resetGame() {
             if (confirm("Are you sure you want to reset your jesuslings?")) {
                 localStorage.clear();
                 jesuslings = 0;
                 autoClickers = 0;
                 upgradeCost = 10;
+                clickPower = 1;
+                powerCost = 50;
                 updateDisplay();
             }
         }
 
-        // 6. Passive Game Loop
+        // Passive game loop
         setInterval(() => {
             if (autoClickers > 0) {
                 jesuslings += autoClickers;
