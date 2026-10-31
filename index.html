@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>guzmaniclicker</title>
     <style>
         :root {
@@ -20,6 +20,9 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
+            overscroll-behavior: none;              /* no pull-to-refresh bounce */
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;             /* no double-tap zoom, faster taps */
         }
 
         /* Fills the whole screen */
@@ -30,11 +33,14 @@
             background-color: #2a2a2a;
             display: flex;
             overflow: hidden;
+            box-sizing: border-box;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         }
 
         .left-panel {
             flex: 1;
             min-width: 0;
+            min-height: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -67,6 +73,7 @@
             font-weight: bold;
             cursor: pointer;      /* click to switch number format */
             user-select: none;
+            -webkit-user-select: none;
         }
 
         .jesuslings-number:hover {
@@ -77,6 +84,7 @@
             display: inline-block;
             cursor: pointer;
             user-select: none;
+            -webkit-user-select: none;
             outline: none;
             transition: transform 0.1s;
             background: transparent;
@@ -90,6 +98,8 @@
             height: auto;
             object-fit: contain;
             transition: filter 0.2s;
+            -webkit-user-drag: none;
+            user-select: none;
         }
 
         .image-clicker-container:hover .clicker-img {
@@ -108,6 +118,7 @@
             cursor: pointer;
             text-decoration: underline;
             font-size: 12px;
+            padding: 8px;
         }
 
         /* MIDDLE: upgrades column */
@@ -118,6 +129,7 @@
             border-left: 1px solid #444;
             padding: 12px;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             display: flex;
             flex-direction: column;
             gap: 14px;
@@ -148,6 +160,7 @@
 
         .upgrade-btn {
             width: 100%;
+            min-height: 64px;
             padding: 10px;
             cursor: pointer;
             background-color: #28a745;
@@ -159,6 +172,9 @@
             align-items: center;
             gap: 12px;
             transition: background-color 0.2s;
+            font-family: inherit;
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .upgrade-btn:hover:not(:disabled) {
@@ -187,6 +203,7 @@
             object-position: center;
             border-radius: 6px;
             background: rgba(0,0,0,0.25);
+            -webkit-user-drag: none;
         }
 
         .upgrade-btn:disabled .upgrade-icon {
@@ -257,6 +274,7 @@
             z-index: 1000;
             cursor: pointer;
             user-select: none;
+            -webkit-user-select: none;
             animation-name: angry-cross;
             animation-timing-function: linear;
             animation-fill-mode: forwards;
@@ -299,6 +317,104 @@
             from { opacity: 1; transform: translateY(0); }
             to   { opacity: 0; transform: translateY(-80px); }
         }
+
+        /* ================= RESPONSIVE ================= */
+
+        /* Small laptops and landscape phones: keep 3 columns but slimmer */
+        @media (max-width: 1000px) and (min-width: 801px) {
+            .upgrades-panel { width: 280px; }
+            .description-panel { width: 220px; }
+        }
+
+        /* Phones in landscape (short screens): shrink the clicker so it fits */
+        @media (max-height: 520px) and (min-width: 801px) {
+            .jesuslings-title { font-size: 1.8rem; }
+            .jesuslings-number { font-size: 2.4rem; margin-bottom: 8px; }
+            .clicker-img {
+                max-width: min(360px, 48vh);
+                max-height: min(360px, 48vh);
+            }
+            .reset-btn { margin-top: 8px; }
+        }
+
+        /* Phones in portrait: stack everything in one column */
+        @media (max-width: 800px) {
+            :root { --icon-size: 48px; }
+
+            .game-container {
+                flex-direction: column;
+            }
+
+            /* top: clicking area */
+            .left-panel {
+                order: 1;
+                flex: 1 1 0;
+                padding: 8px 12px;
+            }
+
+            .per-click {
+                top: 8px;
+                left: 12px;
+                font-size: 13px;
+            }
+
+            .jesuslings-title { font-size: 1.7rem; margin-bottom: 2px; }
+            .jesuslings-number { font-size: 2.4rem; margin-bottom: 8px; }
+
+            .clicker-img {
+                max-width: min(240px, 28vh);
+                max-height: min(240px, 28vh);
+            }
+
+            .reset-btn { margin-top: 6px; font-size: 11px; }
+
+            /* middle: description strip */
+            .description-panel {
+                order: 2;
+                width: 100%;
+                height: 86px;
+                flex: 0 0 auto;
+                border-left: none;
+                border-top: 1px solid #444;
+                padding: 8px 12px;
+                box-sizing: border-box;
+            }
+
+            .description-box {
+                padding: 8px 12px;
+            }
+
+            .description-title {
+                font-size: 0.95rem;
+                margin: 0 0 4px 0;
+                padding-bottom: 4px;
+            }
+
+            .description-text {
+                font-size: 13px;
+                line-height: 1.35;
+            }
+
+            /* bottom: upgrades list */
+            .upgrades-panel {
+                order: 3;
+                width: 100%;
+                height: 42%;
+                flex: 0 0 auto;
+                border-left: none;
+                border-top: 1px solid #444;
+                padding: 10px;
+                box-sizing: border-box;
+                gap: 10px;
+            }
+
+            .angry-jesus {
+                width: 110px;
+                height: 110px;
+            }
+
+            .float-text { font-size: 22px; }
+        }
     </style>
 </head>
 <body>
@@ -311,7 +427,7 @@
             <div class="jesuslings-number" id="jesuslings" title="Click to switch number format">0</div>
 
             <div id="click-target" class="image-clicker-container">
-                <img src="ppzeus.png" alt="Click Target" class="clicker-img">
+                <img src="ppzeus.png" alt="Click Target" class="clicker-img" draggable="false">
             </div>
 
             <button class="reset-btn" onclick="resetGame()">Reset Game Data</button>
@@ -339,7 +455,7 @@
 
         </div>
 
-        <!-- Description box (right of the upgrades) -->
+        <!-- Description box (right of the upgrades on desktop, a strip under the clicker on phones) -->
         <div class="description-panel">
             <div class="description-box">
                 <div class="description-title" id="description-title">Description</div>
@@ -414,7 +530,7 @@
         // --- UPGRADE LIST ---
         // section: 'click' = top box, 'other' = middle box, 'event' = bottom box
         // growth: how much the cost multiplies after each purchase
-        // description: the text shown in the description box on hover
+        // description: the text shown in the description box on hover / tap
         const UPGRADES = [
             {
                 id: 'power', section: 'click',
@@ -523,6 +639,7 @@
             const img = document.createElement('img');
             img.className = 'upgrade-icon';
             img.alt = '';
+            img.draggable = false;
             img.onerror = () => useFallbackIcon(img);
             img.src = u.img;
 
@@ -540,8 +657,19 @@
             btn.appendChild(text);
 
             btn.addEventListener('click', () => buyUpgrade(u));
-            item.addEventListener('mouseenter', () => showDescription(u));
-            item.addEventListener('mouseleave', () => showDescription(null));
+
+            // Mouse: show on hover, clear on leave.
+            // Touch/pen: show on tap and keep it showing (there is no hover on phones).
+            item.addEventListener('pointerenter', (e) => {
+                if (e.pointerType === 'mouse') showDescription(u);
+            });
+            item.addEventListener('pointerleave', (e) => {
+                if (e.pointerType === 'mouse') showDescription(null);
+            });
+            item.addEventListener('pointerdown', (e) => {
+                if (e.pointerType !== 'mouse') showDescription(u);
+            });
+
             u.btn = btn;
 
             item.appendChild(btn);
@@ -628,6 +756,7 @@
 
             const img = document.createElement('img');
             img.alt = 'Angry Jesus';
+            img.draggable = false;
             img.onerror = () => { img.onerror = null; img.src = ANGRY_FALLBACK; };
             img.src = ANGRY_IMG;
             el.appendChild(img);
