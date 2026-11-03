@@ -110,8 +110,32 @@
             transform: scale(0.92);
         }
 
+        /* Export / Import buttons */
+        .save-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .save-btn {
+            background: transparent;
+            border: 1px solid #666;
+            color: #ddd;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .save-btn:hover {
+            background-color: #3a3a3a;
+            border-color: #999;
+        }
+
         .reset-btn {
-            margin-top: 25px;
+            margin-top: 12px;
             background: none;
             border: none;
             color: #dc3545;
@@ -263,6 +287,103 @@
             white-space: pre-wrap;
         }
 
+        /* ---------- EXPORT / IMPORT WINDOW ---------- */
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+            z-index: 2000;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            width: min(480px, 100%);
+            max-height: 90vh;
+            max-height: 90dvh;
+            overflow-y: auto;
+            background-color: #2a2a2a;
+            border: 1px solid #555;
+            border-radius: 10px;
+            padding: 18px;
+            box-sizing: border-box;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+        }
+
+        .modal-help {
+            font-size: 13px;
+            color: #bbb;
+            line-height: 1.4;
+            margin: 0 0 12px 0;
+        }
+
+        .modal textarea {
+            width: 100%;
+            box-sizing: border-box;
+            background: #1a1a1a;
+            color: #eee;
+            border: 1px solid #555;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            resize: vertical;
+        }
+
+        .modal-status {
+            min-height: 18px;
+            margin: 8px 0 4px 0;
+            font-size: 13px;
+        }
+
+        .modal-status.ok  { color: #7CFC9A; }
+        .modal-status.err { color: #ff6b6b; }
+
+        .modal-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .modal-buttons button {
+            flex: 1 1 auto;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 6px;
+            background: #28a745;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .modal-buttons button:hover {
+            background: #218838;
+        }
+
+        .modal-buttons button.secondary {
+            background: #444;
+        }
+
+        .modal-buttons button.secondary:hover {
+            background: #555;
+        }
+
         /* ---------- ANGRY JESUS EVENT ---------- */
 
         /* Crosses the whole screen from left to right */
@@ -334,7 +455,8 @@
                 max-width: min(360px, 48vh);
                 max-height: min(360px, 48vh);
             }
-            .reset-btn { margin-top: 8px; }
+            .save-row { margin-top: 8px; }
+            .reset-btn { margin-top: 4px; }
         }
 
         /* Phones in portrait: stack everything in one column */
@@ -366,7 +488,9 @@
                 max-height: min(240px, 28vh);
             }
 
-            .reset-btn { margin-top: 6px; font-size: 11px; }
+            .save-row { margin-top: 6px; gap: 8px; }
+            .save-btn { padding: 6px 14px; font-size: 12px; }
+            .reset-btn { margin-top: 2px; font-size: 11px; padding: 4px; }
 
             /* middle: description strip */
             .description-panel {
@@ -430,6 +554,11 @@
                 <img src="ppzeus.png" alt="Click Target" class="clicker-img" draggable="false">
             </div>
 
+            <div class="save-row">
+                <button class="save-btn" id="export-btn">Export</button>
+                <button class="save-btn" id="import-btn">Import</button>
+            </div>
+
             <button class="reset-btn" onclick="resetGame()">Reset Game Data</button>
         </div>
 
@@ -461,6 +590,24 @@
                 <div class="description-title" id="description-title">Description</div>
                 <div class="description-text" id="description-text"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Export / Import window -->
+    <div class="modal-overlay" id="save-modal">
+        <div class="modal">
+            <div class="modal-title" id="modal-title"></div>
+            <div class="modal-help" id="modal-help"></div>
+            <textarea id="save-text" rows="6" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+            <div class="modal-status" id="modal-status"></div>
+            <div class="modal-buttons">
+                <button id="btn-copy">Copy</button>
+                <button id="btn-download" class="secondary">Download file</button>
+                <button id="btn-file" class="secondary">Load from file</button>
+                <button id="btn-import">Import</button>
+                <button id="btn-close" class="secondary">Close</button>
+            </div>
+            <input type="file" id="file-input" accept=".txt,.json,text/plain" hidden>
         </div>
     </div>
 
@@ -728,6 +875,185 @@
                 updateDisplay();
             }
         }
+
+        // --- EXPORT / IMPORT ---
+
+        const SAVE_PREFIX = 'JESUS1:';
+
+        // Turns the current game into a single line of text
+        function buildSaveCode() {
+            const data = {
+                jesuslings: Math.floor(jesuslings),
+                fullNumbers: showFullNumbers,
+                upgrades: {}
+            };
+            UPGRADES.forEach(u => {
+                data.upgrades[u.id] = { level: u.level, cost: u.cost };
+            });
+            return SAVE_PREFIX + btoa(JSON.stringify(data));
+        }
+
+        // Checks a number is safe to load (whole, not negative, not huge)
+        function validCount(n) {
+            return typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1e18 && Math.floor(n) === n;
+        }
+
+        // Reads a save code. Returns the data, or null if it isn't a good save.
+        function parseSaveCode(raw) {
+            try {
+                const code = String(raw).replace(/\s+/g, '');
+                if (!code.startsWith(SAVE_PREFIX)) return null;
+                const data = JSON.parse(atob(code.slice(SAVE_PREFIX.length)));
+                if (!data || typeof data !== 'object') return null;
+                if (!validCount(data.jesuslings)) return null;
+                if (!data.upgrades || typeof data.upgrades !== 'object') return null;
+                for (const u of UPGRADES) {
+                    const saved = data.upgrades[u.id];
+                    if (!saved) continue; // missing upgrades fall back to their defaults
+                    if (!validCount(saved.level) || !validCount(saved.cost)) return null;
+                }
+                return data;
+            } catch (err) {
+                return null;
+            }
+        }
+
+        // Replaces the current game with the loaded one
+        function applySave(data) {
+            jesuslings = data.jesuslings;
+            showFullNumbers = data.fullNumbers === true;
+            localStorage.setItem('clicker_fullnumbers', showFullNumbers);
+            UPGRADES.forEach(u => {
+                const saved = data.upgrades[u.id];
+                u.level = saved ? saved.level : u.startLevel;
+                u.cost = saved ? saved.cost : u.baseCost;
+            });
+            saveGame();
+            updateDisplay();
+        }
+
+        // --- EXPORT / IMPORT WINDOW ---
+        const modal = document.getElementById('save-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalHelp = document.getElementById('modal-help');
+        const saveText = document.getElementById('save-text');
+        const modalStatus = document.getElementById('modal-status');
+        const btnCopy = document.getElementById('btn-copy');
+        const btnDownload = document.getElementById('btn-download');
+        const btnFile = document.getElementById('btn-file');
+        const btnImport = document.getElementById('btn-import');
+        const btnClose = document.getElementById('btn-close');
+        const fileInput = document.getElementById('file-input');
+
+        function setStatus(message, kind) {
+            modalStatus.innerText = message || '';
+            modalStatus.className = 'modal-status' + (kind ? ` ${kind}` : '');
+        }
+
+        function openModal(mode) {
+            const exporting = mode === 'export';
+            setStatus('');
+            modalTitle.innerText = exporting ? 'Export Save' : 'Import Save';
+            modalHelp.innerText = exporting
+                ? 'Copy this code or download it as a file. Keep it somewhere safe, then use Import to load it on any device.'
+                : 'Paste a save code below, or load a saved file, then press Import. This replaces your current progress.';
+
+            saveText.readOnly = exporting;
+            saveText.value = exporting ? buildSaveCode() : '';
+            saveText.placeholder = exporting ? '' : 'Paste your save code here';
+
+            btnCopy.style.display = exporting ? '' : 'none';
+            btnDownload.style.display = exporting ? '' : 'none';
+            btnFile.style.display = exporting ? 'none' : '';
+            btnImport.style.display = exporting ? 'none' : '';
+
+            modal.classList.add('open');
+            if (exporting) {
+                saveText.focus();
+                saveText.select();
+            } else {
+                saveText.focus();
+            }
+        }
+
+        function closeModal() {
+            modal.classList.remove('open');
+            saveText.value = '';
+            setStatus('');
+        }
+
+        document.getElementById('export-btn').addEventListener('click', () => openModal('export'));
+        document.getElementById('import-btn').addEventListener('click', () => openModal('import'));
+        btnClose.addEventListener('click', closeModal);
+
+        // Click the dark area outside the window to close it
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+        });
+
+        // Copy the export code
+        btnCopy.addEventListener('click', async () => {
+            const code = saveText.value;
+            try {
+                await navigator.clipboard.writeText(code);
+                setStatus('Copied!', 'ok');
+            } catch (err) {
+                // older browsers / local files: fall back to selecting the text
+                saveText.focus();
+                saveText.select();
+                try {
+                    document.execCommand('copy');
+                    setStatus('Copied!', 'ok');
+                } catch (err2) {
+                    setStatus('Could not copy automatically. Select the text and copy it.', 'err');
+                }
+            }
+        });
+
+        // Download the export code as a file
+        btnDownload.addEventListener('click', () => {
+            const blob = new Blob([saveText.value], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'guzmaniclicker-save.txt';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            setStatus('Save file downloaded.', 'ok');
+        });
+
+        // Load a save code from a file into the box
+        btnFile.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                saveText.value = String(reader.result).trim();
+                setStatus('File loaded. Press Import to use it.', 'ok');
+            };
+            reader.onerror = () => setStatus('Could not read that file.', 'err');
+            reader.readAsText(file);
+            fileInput.value = ''; // lets you pick the same file again later
+        });
+
+        // Import the pasted / loaded code
+        btnImport.addEventListener('click', () => {
+            const data = parseSaveCode(saveText.value);
+            if (!data) {
+                setStatus('That is not a valid save code.', 'err');
+                return;
+            }
+            if (!confirm('This will replace your current progress. Continue?')) return;
+            applySave(data);
+            setStatus('Save imported!', 'ok');
+        });
 
         // --- ANGRY JESUS EVENT ---
 
