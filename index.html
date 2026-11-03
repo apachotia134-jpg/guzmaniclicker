@@ -47,7 +47,7 @@
             justify-content: center;
             padding: 20px;
             text-align: center;
-            position: relative; /* lets the corner label sit inside this panel */
+            position: relative; /* lets the corner buttons sit inside this panel */
         }
 
         /* Small "per click" number in the corner */
@@ -58,6 +58,27 @@
             font-size: 14px;
             color: #a0dce4;
             opacity: 0.9;
+        }
+
+        /* Settings button in the opposite corner */
+        .settings-btn {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            background: transparent;
+            border: 1px solid #666;
+            color: #ddd;
+            border-radius: 6px;
+            padding: 7px 14px;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .settings-btn:hover {
+            background-color: #3a3a3a;
+            border-color: #999;
         }
 
         .jesuslings-title {
@@ -108,41 +129,6 @@
 
         .image-clicker-container:active {
             transform: scale(0.92);
-        }
-
-        /* Export / Import buttons */
-        .save-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 22px;
-        }
-
-        .save-btn {
-            background: transparent;
-            border: 1px solid #666;
-            color: #ddd;
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-family: inherit;
-            cursor: pointer;
-            transition: background-color 0.2s, border-color 0.2s;
-        }
-
-        .save-btn:hover {
-            background-color: #3a3a3a;
-            border-color: #999;
-        }
-
-        .reset-btn {
-            margin-top: 12px;
-            background: none;
-            border: none;
-            color: #dc3545;
-            cursor: pointer;
-            text-decoration: underline;
-            font-size: 12px;
-            padding: 8px;
         }
 
         /* MIDDLE: upgrades column */
@@ -287,7 +273,7 @@
             white-space: pre-wrap;
         }
 
-        /* ---------- EXPORT / IMPORT WINDOW ---------- */
+        /* ---------- POP-UP WINDOWS (settings + export/import) ---------- */
 
         .modal-overlay {
             position: fixed;
@@ -384,6 +370,48 @@
             background: #555;
         }
 
+        /* Settings window list */
+        .settings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 12px 0 14px 0;
+        }
+
+        .settings-item {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #555;
+            border-radius: 8px;
+            background: #333;
+            color: #eee;
+            font-size: 15px;
+            font-family: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .settings-item:hover {
+            background: #404040;
+        }
+
+        .settings-item.danger {
+            border-color: #7b2630;
+            color: #ff8d8d;
+        }
+
+        .settings-item.danger:hover {
+            background: #3d2428;
+        }
+
+        .settings-item-note {
+            display: block;
+            margin-top: 3px;
+            font-size: 12px;
+            color: #999;
+        }
+
         /* ---------- ANGRY JESUS EVENT ---------- */
 
         /* Crosses the whole screen from left to right */
@@ -455,8 +483,6 @@
                 max-width: min(360px, 48vh);
                 max-height: min(360px, 48vh);
             }
-            .save-row { margin-top: 8px; }
-            .reset-btn { margin-top: 4px; }
         }
 
         /* Phones in portrait: stack everything in one column */
@@ -475,9 +501,16 @@
             }
 
             .per-click {
-                top: 8px;
+                top: 10px;
                 left: 12px;
                 font-size: 13px;
+            }
+
+            .settings-btn {
+                top: 6px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 12px;
             }
 
             .jesuslings-title { font-size: 1.7rem; margin-bottom: 2px; }
@@ -487,10 +520,6 @@
                 max-width: min(240px, 28vh);
                 max-height: min(240px, 28vh);
             }
-
-            .save-row { margin-top: 6px; gap: 8px; }
-            .save-btn { padding: 6px 14px; font-size: 12px; }
-            .reset-btn { margin-top: 2px; font-size: 11px; padding: 4px; }
 
             /* middle: description strip */
             .description-panel {
@@ -546,6 +575,7 @@
     <div class="game-container">
         <div class="left-panel">
             <div class="per-click" id="per-click">+1 per click</div>
+            <button class="settings-btn" id="settings-btn">&#9881; Settings</button>
 
             <div class="jesuslings-title">jesuslings</div>
             <div class="jesuslings-number" id="jesuslings" title="Click to switch number format">0</div>
@@ -553,13 +583,6 @@
             <div id="click-target" class="image-clicker-container">
                 <img src="ppzeus.png" alt="Click Target" class="clicker-img" draggable="false">
             </div>
-
-            <div class="save-row">
-                <button class="save-btn" id="export-btn">Export</button>
-                <button class="save-btn" id="import-btn">Import</button>
-            </div>
-
-            <button class="reset-btn" onclick="resetGame()">Reset Game Data</button>
         </div>
 
         <div class="upgrades-panel">
@@ -589,6 +612,30 @@
             <div class="description-box">
                 <div class="description-title" id="description-title">Description</div>
                 <div class="description-text" id="description-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings window -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <div class="modal-title">Settings</div>
+            <div class="settings-list">
+                <button class="settings-item" id="set-export">
+                    Export save
+                    <span class="settings-item-note">Get a code or file of your progress</span>
+                </button>
+                <button class="settings-item" id="set-import">
+                    Import save
+                    <span class="settings-item-note">Load progress from a code or file</span>
+                </button>
+                <button class="settings-item danger" id="set-reset">
+                    Reset game data
+                    <span class="settings-item-note">Erase all progress (you will be asked to confirm)</span>
+                </button>
+            </div>
+            <div class="modal-buttons">
+                <button id="settings-close" class="secondary">Close</button>
             </div>
         </div>
     </div>
@@ -932,6 +979,39 @@
             updateDisplay();
         }
 
+        // --- SETTINGS WINDOW ---
+        const settingsModal = document.getElementById('settings-modal');
+
+        function openSettings() {
+            settingsModal.classList.add('open');
+        }
+
+        function closeSettings() {
+            settingsModal.classList.remove('open');
+        }
+
+        document.getElementById('settings-btn').addEventListener('click', openSettings);
+        document.getElementById('settings-close').addEventListener('click', closeSettings);
+
+        // Click the dark area outside the window to close it
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) closeSettings();
+        });
+
+        // Settings choices: close this window, then do the thing
+        document.getElementById('set-export').addEventListener('click', () => {
+            closeSettings();
+            openModal('export');
+        });
+        document.getElementById('set-import').addEventListener('click', () => {
+            closeSettings();
+            openModal('import');
+        });
+        document.getElementById('set-reset').addEventListener('click', () => {
+            closeSettings();
+            resetGame(); // asks "are you sure?" first
+        });
+
         // --- EXPORT / IMPORT WINDOW ---
         const modal = document.getElementById('save-modal');
         const modalTitle = document.getElementById('modal-title');
@@ -982,8 +1062,6 @@
             setStatus('');
         }
 
-        document.getElementById('export-btn').addEventListener('click', () => openModal('export'));
-        document.getElementById('import-btn').addEventListener('click', () => openModal('import'));
         btnClose.addEventListener('click', closeModal);
 
         // Click the dark area outside the window to close it
@@ -991,8 +1069,11 @@
             if (e.target === modal) closeModal();
         });
 
+        // Escape closes whichever window is open
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+            if (e.key !== 'Escape') return;
+            if (modal.classList.contains('open')) closeModal();
+            if (settingsModal.classList.contains('open')) closeSettings();
         });
 
         // Copy the export code
