@@ -273,7 +273,7 @@
             white-space: pre-wrap;
         }
 
-        /* ---------- POP-UP WINDOWS (settings + export/import) ---------- */
+        /* ---------- POP-UP WINDOWS (settings, save, admin) ---------- */
 
         .modal-overlay {
             position: fixed;
@@ -328,6 +328,24 @@
             font-family: monospace;
             font-size: 12px;
             resize: vertical;
+        }
+
+        .modal-input {
+            width: 100%;
+            box-sizing: border-box;
+            background: #1a1a1a;
+            color: #eee;
+            border: 1px solid #555;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 15px;
+        }
+
+        .modal-input:focus,
+        .modal textarea:focus {
+            outline: none;
+            border-color: #28a745;
         }
 
         .modal-status {
@@ -410,6 +428,68 @@
             margin-top: 3px;
             font-size: 12px;
             color: #999;
+        }
+
+        /* Admin panel sections */
+        .admin-section {
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: #252525;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .admin-section-title {
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #a0dce4;
+        }
+
+        .admin-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .admin-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .admin-label {
+            flex: 1 1 120px;
+            font-size: 14px;
+        }
+
+        .admin-row .modal-input {
+            flex: 1 1 100px;
+            width: auto;
+            min-width: 0;
+        }
+
+        .admin-btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 6px;
+            background: #28a745;
+            color: #fff;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .admin-btn:hover {
+            background: #218838;
+        }
+
+        .admin-btn.secondary {
+            background: #444;
+        }
+
+        .admin-btn.secondary:hover {
+            background: #555;
         }
 
         /* ---------- ANGRY JESUS EVENT ---------- */
@@ -629,6 +709,10 @@
                     Import save
                     <span class="settings-item-note">Load progress from a code or file</span>
                 </button>
+                <button class="settings-item" id="set-admin">
+                    Admin panel
+                    <span class="settings-item-note">Password protected</span>
+                </button>
                 <button class="settings-item danger" id="set-reset">
                     Reset game data
                     <span class="settings-item-note">Erase all progress (you will be asked to confirm)</span>
@@ -655,6 +739,61 @@
                 <button id="btn-close" class="secondary">Close</button>
             </div>
             <input type="file" id="file-input" accept=".txt,.json,text/plain" hidden>
+        </div>
+    </div>
+
+    <!-- Admin password window -->
+    <div class="modal-overlay" id="admin-login-modal">
+        <div class="modal">
+            <div class="modal-title">Admin Panel</div>
+            <div class="modal-help">Enter the password to continue.</div>
+            <input type="password" class="modal-input" id="admin-pass" placeholder="Password"
+                   autocomplete="off" autocapitalize="off" spellcheck="false">
+            <div class="modal-status" id="admin-login-status"></div>
+            <div class="modal-buttons">
+                <button id="admin-login-btn">Unlock</button>
+                <button id="admin-login-cancel" class="secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin panel window -->
+    <div class="modal-overlay" id="admin-modal">
+        <div class="modal">
+            <div class="modal-title">Admin Panel</div>
+            <div class="modal-help">Short forms work: 5k, 2.5m, 3b, 1t.</div>
+
+            <div class="admin-section">
+                <div class="admin-section-title">Jesuslings</div>
+                <div class="admin-row">
+                    <input type="text" class="modal-input" id="admin-amount" placeholder="Amount (e.g. 1m)"
+                           inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+                    <button class="admin-btn" id="admin-add">Add</button>
+                    <button class="admin-btn secondary" id="admin-set">Set</button>
+                </div>
+                <div class="admin-row">
+                    <button class="admin-btn secondary" data-quick="1000">+1K</button>
+                    <button class="admin-btn secondary" data-quick="1000000">+1M</button>
+                    <button class="admin-btn secondary" data-quick="1000000000">+1B</button>
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <div class="admin-section-title">Upgrade levels</div>
+                <div id="admin-upgrades"></div>
+            </div>
+
+            <div class="admin-section">
+                <div class="admin-section-title">Events</div>
+                <div class="admin-row">
+                    <button class="admin-btn" id="admin-spawn-angry">Spawn Angry Jesus now</button>
+                </div>
+            </div>
+
+            <div class="modal-status" id="admin-status"></div>
+            <div class="modal-buttons">
+                <button id="admin-lock" class="secondary">Lock &amp; close</button>
+            </div>
         </div>
     </div>
 
@@ -716,6 +855,11 @@
         const CROSS_TIME_SEC = 6;             // how long he takes to cross the screen
         const PENALTY_PERCENT = 0.10;         // 10% lost if you miss him
         const REWARD_PER_LEVEL = 20;          // x click value paid per level (level 0 still pays 1 level)
+
+        // --- ADMIN SETTINGS ---
+        const ADMIN_PASSWORD = 'JAGM';        // <- change the password here
+        const MAX_JESUSLINGS = 1e15;          // admin tools can't go above this
+        const MAX_COST = 1e15;                // upgrade costs are capped here
 
         // --- DESCRIPTION BOX TEXT ---
         // Shown when you aren't hovering over an upgrade
@@ -1007,6 +1151,10 @@
             closeSettings();
             openModal('import');
         });
+        document.getElementById('set-admin').addEventListener('click', () => {
+            closeSettings();
+            openAdmin();
+        });
         document.getElementById('set-reset').addEventListener('click', () => {
             closeSettings();
             resetGame(); // asks "are you sure?" first
@@ -1069,13 +1217,6 @@
             if (e.target === modal) closeModal();
         });
 
-        // Escape closes whichever window is open
-        document.addEventListener('keydown', (e) => {
-            if (e.key !== 'Escape') return;
-            if (modal.classList.contains('open')) closeModal();
-            if (settingsModal.classList.contains('open')) closeSettings();
-        });
-
         // Copy the export code
         btnCopy.addEventListener('click', async () => {
             const code = saveText.value;
@@ -1136,9 +1277,215 @@
             setStatus('Save imported!', 'ok');
         });
 
+        // --- ADMIN PANEL ---
+        // Note: the password is stored in this file, so this keeps casual players
+        // out but is not real security. Anyone who views the page source can read it.
+
+        let adminUnlocked = false;   // stays unlocked until you press "Lock & close" or reload
+
+        const adminLoginModal = document.getElementById('admin-login-modal');
+        const adminPass = document.getElementById('admin-pass');
+        const adminLoginStatus = document.getElementById('admin-login-status');
+        const adminModal = document.getElementById('admin-modal');
+        const adminAmount = document.getElementById('admin-amount');
+        const adminStatus = document.getElementById('admin-status');
+        const adminUpgradesBox = document.getElementById('admin-upgrades');
+
+        function setAdminStatus(message, kind) {
+            adminStatus.innerText = message || '';
+            adminStatus.className = 'modal-status' + (kind ? ` ${kind}` : '');
+        }
+
+        // Turns "5k", "2.5m", "3b", "1t" or "1500" into a whole number (or null if invalid)
+        function parseAmount(text) {
+            const match = String(text).trim().replace(/,/g, '').match(/^(\d+(?:\.\d+)?)([kmbt])?$/i);
+            if (!match) return null;
+            const multipliers = { k: 1e3, m: 1e6, b: 1e9, t: 1e12 };
+            const suffix = match[2] ? match[2].toLowerCase() : '';
+            const value = Math.floor(parseFloat(match[1]) * (multipliers[suffix] || 1));
+            return Number.isFinite(value) ? value : null;
+        }
+
+        // The highest level the admin tools will set (keeps numbers from breaking)
+        function adminMaxLevel(u) {
+            return u.id === 'blessing' ? 30 : 1000;
+        }
+
+        // Works out what an upgrade should cost at a given level
+        function costForLevel(u, level) {
+            let cost = u.baseCost;
+            for (let i = u.startLevel; i < level; i++) {
+                cost = Math.round(cost * u.growth);
+                if (cost >= MAX_COST) return MAX_COST;
+            }
+            return cost;
+        }
+
+        function refreshAdminInputs() {
+            UPGRADES.forEach(u => {
+                if (u.adminInput) u.adminInput.value = u.level;
+            });
+        }
+
+        // Build one row per upgrade (label, level box, Set button)
+        UPGRADES.forEach(u => {
+            const row = document.createElement('div');
+            row.className = 'admin-row';
+
+            const label = document.createElement('div');
+            label.className = 'admin-label';
+            label.innerText = u.name;
+
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'modal-input';
+            input.min = u.startLevel;
+            input.max = adminMaxLevel(u);
+            input.step = 1;
+            input.inputMode = 'numeric';
+            u.adminInput = input;
+
+            const setBtn = document.createElement('button');
+            setBtn.className = 'admin-btn';
+            setBtn.innerText = 'Set';
+            setBtn.addEventListener('click', () => {
+                const level = parseInt(input.value, 10);
+                const max = adminMaxLevel(u);
+                if (!Number.isInteger(level) || level < u.startLevel || level > max) {
+                    setAdminStatus(`${u.name}: enter a level from ${u.startLevel} to ${max}.`, 'err');
+                    return;
+                }
+                u.level = level;
+                u.cost = costForLevel(u, level);
+                saveGame();
+                updateDisplay();
+                refreshAdminInputs();
+                setAdminStatus(`${u.name} set to level ${level}.`, 'ok');
+            });
+
+            row.appendChild(label);
+            row.appendChild(input);
+            row.appendChild(setBtn);
+            adminUpgradesBox.appendChild(row);
+        });
+
+        function openAdmin() {
+            if (adminUnlocked) {
+                showAdminPanel();
+            } else {
+                adminPass.value = '';
+                adminLoginStatus.innerText = '';
+                adminLoginStatus.className = 'modal-status';
+                adminLoginModal.classList.add('open');
+                adminPass.focus();
+            }
+        }
+
+        function closeAdminLogin() {
+            adminLoginModal.classList.remove('open');
+            adminPass.value = '';
+        }
+
+        function showAdminPanel() {
+            setAdminStatus('');
+            adminAmount.value = '';
+            refreshAdminInputs();
+            adminModal.classList.add('open');
+        }
+
+        function closeAdminPanel() {
+            adminModal.classList.remove('open');
+        }
+
+        function tryAdminLogin() {
+            if (adminPass.value === ADMIN_PASSWORD) {
+                adminUnlocked = true;
+                closeAdminLogin();
+                showAdminPanel();
+            } else {
+                adminLoginStatus.innerText = 'Wrong password.';
+                adminLoginStatus.className = 'modal-status err';
+                adminPass.select();
+            }
+        }
+
+        document.getElementById('admin-login-btn').addEventListener('click', tryAdminLogin);
+        document.getElementById('admin-login-cancel').addEventListener('click', closeAdminLogin);
+        adminPass.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') tryAdminLogin();
+        });
+        adminLoginModal.addEventListener('click', (e) => {
+            if (e.target === adminLoginModal) closeAdminLogin();
+        });
+        adminModal.addEventListener('click', (e) => {
+            if (e.target === adminModal) closeAdminPanel();
+        });
+
+        // Lock again and close
+        document.getElementById('admin-lock').addEventListener('click', () => {
+            adminUnlocked = false;
+            closeAdminPanel();
+        });
+
+        // Add / Set jesuslings
+        document.getElementById('admin-add').addEventListener('click', () => {
+            const amount = parseAmount(adminAmount.value);
+            if (amount === null) {
+                setAdminStatus('Enter a number like 500, 5k or 2.5m.', 'err');
+                return;
+            }
+            jesuslings = Math.min(jesuslings + amount, MAX_JESUSLINGS);
+            saveGame();
+            updateDisplay();
+            setAdminStatus(`Added ${formatNumber(amount)} jesuslings.`, 'ok');
+        });
+
+        document.getElementById('admin-set').addEventListener('click', () => {
+            const amount = parseAmount(adminAmount.value);
+            if (amount === null) {
+                setAdminStatus('Enter a number like 500, 5k or 2.5m.', 'err');
+                return;
+            }
+            jesuslings = Math.min(amount, MAX_JESUSLINGS);
+            saveGame();
+            updateDisplay();
+            setAdminStatus(`Jesuslings set to ${formatNumber(jesuslings)}.`, 'ok');
+        });
+
+        // Quick add buttons
+        document.querySelectorAll('[data-quick]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const amount = Number(btn.dataset.quick);
+                jesuslings = Math.min(jesuslings + amount, MAX_JESUSLINGS);
+                saveGame();
+                updateDisplay();
+                setAdminStatus(`Added ${formatNumber(amount)} jesuslings.`, 'ok');
+            });
+        });
+
+        // Send Angry Jesus right now
+        document.getElementById('admin-spawn-angry').addEventListener('click', () => {
+            if (angryActive) {
+                setAdminStatus('Angry Jesus is already on the screen.', 'err');
+                return;
+            }
+            closeAdminPanel();
+            spawnAngryJesus();
+        });
+
+        // Escape closes whichever window is open
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            if (modal.classList.contains('open')) closeModal();
+            if (settingsModal.classList.contains('open')) closeSettings();
+            if (adminLoginModal.classList.contains('open')) closeAdminLogin();
+            if (adminModal.classList.contains('open')) closeAdminPanel();
+        });
+
         // --- ANGRY JESUS EVENT ---
 
         let angryActive = false;
+        let angryTimer = null;
 
         function floatText(message, x, y, kind) {
             const el = document.createElement('div');
@@ -1204,9 +1551,11 @@
             scheduleAngryJesus();
         }
 
+        // Only ever one timer waiting, so manual spawns can't stack up extra ones
         function scheduleAngryJesus() {
+            clearTimeout(angryTimer);
             const wait = EVENT_MIN_MS + Math.random() * (EVENT_MAX_MS - EVENT_MIN_MS);
-            setTimeout(spawnAngryJesus, wait);
+            angryTimer = setTimeout(spawnAngryJesus, wait);
         }
 
         scheduleAngryJesus();
